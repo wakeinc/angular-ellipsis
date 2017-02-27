@@ -56,6 +56,7 @@ angular.module('dibari.angular-ellipsis', [])
 		scope: {
 			ngShow: '=',
 			ngBind: '=',
+			ngModel: '=',
 			ngBindHtml: '=',
 			ellipsisAppend: '@',
 			ellipsisAppendClick: '&',
@@ -91,14 +92,14 @@ angular.module('dibari.angular-ellipsis', [])
 				}
 
 				function buildEllipsis() {
-					var binding = scope.ngBind || scope.ngBindHtml;
+					var binding = scope.ngBind || scope.ngBindHtml || scope.ngModel;
 					var isTrustedHTML = false;
 					if($sce.isEnabled() && angular.isObject(binding) && $sce.getTrustedHtml(binding)) {
 						isTrustedHTML = true;
 						binding = $sce.getTrustedHtml(binding);
 					}
 					if (binding) {
-						var isHtml = (!(!!scope.ngBind) && !!(scope.ngBindHtml));
+						var isHtml = (!(!!scope.ngBind) && !!(scope.ngBindHtml) && !!(scope.ngModel));
 						var i = 0,
 							ellipsisSymbol = (typeof(attributes.ellipsisSymbol) !== 'undefined') ? attributes.ellipsisSymbol : '&hellip;',
 							ellipsisSeparator = (typeof(scope.ellipsisSeparator) !== 'undefined') ? attributes.ellipsisSeparator : ' ',
@@ -201,6 +202,13 @@ angular.module('dibari.angular-ellipsis', [])
 				 *	Execute ellipsis truncate on ngBind update
 				 */
 				scope.$watch('ngBind', function() {
+					asyncDigestImmediate.add(buildEllipsis);
+				});
+
+				/**
+				 *	Execute ellipsis truncate on ngModel update
+				 */
+				scope.$watch('ngModel', function() {
 					asyncDigestImmediate.add(buildEllipsis);
 				});
 
