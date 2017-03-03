@@ -105,7 +105,7 @@ angular.module('dibari.angular-ellipsis', [])
 							ellipsisSeparator = (typeof(scope.ellipsisSeparator) !== 'undefined') ? attributes.ellipsisSeparator : ' ',
 							ellipsisSeparatorReg = (typeof(scope.ellipsisSeparatorReg) !== 'undefined') ? scope.ellipsisSeparatorReg : false,
 							appendString = (typeof(scope.ellipsisAppend) !== 'undefined' && scope.ellipsisAppend !== '') ? ellipsisSymbol + "<span class='angular-ellipsis-append'>" + scope.ellipsisAppend + '</span>' : ellipsisSymbol,
-							bindArray = ellipsisSeparatorReg ? binding.match(ellipsisSeparatorReg) : binding.split(ellipsisSeparator);
+							textArray = ellipsisSeparatorReg ? binding.match(ellipsisSeparatorReg) : binding.split(ellipsisSeparator);
 
 						attributes.isTruncated = false;
 						if (isHtml) {
@@ -120,25 +120,16 @@ angular.module('dibari.angular-ellipsis', [])
 
 						// If text has overflow
 						if (isOverflowed(element, scope.useParent)) {
-							var bindArrayStartingLength = bindArray.length,
-								initialMaxHeight = scope.useParent ? getParentHeight(element) : element[0].clientHeight;
+							var bindArrayStartingLength = textArray.length,
+								initialMaxHeight = scope.useParent ? getParentHeight(element) : element[0].clientHeight,
+								bindArray = [];
 
-							if (isHtml) {
-								element.html(binding + appendString);
-							} else {
-								element.text(binding).html(element.html() + appendString);
-							}
 							//Set data-overflow on element for targeting
 							element.attr('data-overflowed', 'true');
 
-							// Set complete text and remove one word at a time, until there is no overflow
+							// Set complete text and add one word at a time, until there is overflow
 							for (; i < bindArrayStartingLength; i++) {
-								var current = bindArray.pop();
-
-								//if the last string still overflowed, then truncate the last string
-								if (bindArray.length === 0) {
-									bindArray[0] = current.substring(0, Math.min(current.length, 5));
-								}
+								bindArray.push(textArray.shift());
 
 								if (isHtml) {
 									element.html(bindArray.join(ellipsisSeparator) + appendString);
@@ -146,7 +137,19 @@ angular.module('dibari.angular-ellipsis', [])
 									element.text(bindArray.join(ellipsisSeparator)).html(element.html() + appendString);
 								}
 
-								if ((scope.useParent ? element.parent()[0] : element[0]).scrollHeight < initialMaxHeight || isOverflowed(element, scope.useParent) === false) {
+								if ((scope.useParent ? element.parent()[0] : element[0]).scrollHeight > initialMaxHeight || isOverflowed(element, scope.useParent)) {
+									var current = bindArray.pop();
+
+									// if the first word is overflow, then truncate it to 5 letters only
+									if (i === 0) {
+										bindArray[0] = current.substring(0, Math.min(current.length, 5));
+									}
+
+									if (isHtml) {
+										element.html(bindArray.join(ellipsisSeparator) + appendString);
+									} else {
+										element.text(bindArray.join(ellipsisSeparator)).html(element.html() + appendString);
+									}
 									attributes.isTruncated = true;
 									break;
 								}
@@ -268,7 +271,6 @@ angular.module('dibari.angular-ellipsis', [])
 						unbindRefreshEllipsis = null;
 					}
 				});
-
 
 			};
 		}
