@@ -120,6 +120,21 @@ angular.module('dibari.angular-ellipsis', [])
 
 						// If text has overflow
 						if (isOverflowed(element, scope.useParent)) {
+
+							// TODO: Finish converting directive to compute overflow by element nodes instead of pure text
+							var textArray = [];
+							// Splits by node one level deep
+							angular.forEach(element[0].childNodes, function(node) {
+								// If nodeType is text, split by word while retaining spaces
+								if (node.nodeType === 3) {
+									var nodeArray = node.nodeValue.split(/(\s+)/);
+									textArray = textArray.concat(nodeArray);
+								} else {
+									// Otherwise, add node to the text array
+									textArray.push(node);
+								}
+							});
+
 							var bindArrayStartingLength = bindArray.length,
 								initialMaxHeight = scope.useParent ? getParentHeight(element) : element[0].clientHeight;
 
